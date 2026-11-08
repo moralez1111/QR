@@ -1,31 +1,39 @@
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100vh;
+    position: fixed;
+    pointer-events: none;
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background-color: #ffffff;
-  padding: 2em;
+    overflow-x: hidden;
 }
 
 .content-container {
-  max-width: 900px;
-  margin: 0 auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 1em;
+    margin: 1em;
+    background: #fffb;
+    backdrop-filter: blur(2px);
 }
 
 h1 {
-  font-size: 1.1em;
-  line-height: 1.5;
-  font-weight: bold;
-  color: #000000;
-  margin-bottom: 1.5em;
+    font-size: 2em;
 }
 
 .stitch-img {
-  display: block;
-  width: 220px;
-  height: auto;
-  margin-top: 1em;
+    display: block;
+    width: 300px;
+    max-width: 100%;
+    height: auto;
+    margin: 1em auto;
 }
