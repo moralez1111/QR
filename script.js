@@ -26,22 +26,22 @@ function updatePointerPosition(e) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Darkened background overlay (0.97 opacity for a deeper dark environment)
-  ctx.fillStyle = 'rgba(8, 6, 5, 0.97)';
+  // Fill canvas with dark shadow background
+  ctx.fillStyle = 'rgba(15, 12, 10, 0.93)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Slightly tighter flashlight beam radius (0.26 instead of 0.35)
-  const radius = Math.min(canvas.width, canvas.height) * 0.26;
+  // Dynamic light radius base on screen width
+  const radius = Math.min(canvas.width, canvas.height) * 0.35;
 
-  // Dimmed radial gradient for a subtler glow
+  // Create smooth radial gradient spotlight
   const gradient = ctx.createRadialGradient(
-    pointer.x, pointer.y, 5,
+    pointer.x, pointer.y, 10,
     pointer.x, pointer.y, radius
   );
 
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');    // Slightly softer center
-  gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.55)'); // Dimmer mid-glow
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');           // Smooth fade into darkness
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');     // Bright center
+  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)'); // Soft mid-light
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');           // Fade out to darkness
 
   ctx.globalCompositeOperation = 'destination-out';
   ctx.beginPath();
