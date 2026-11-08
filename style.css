@@ -1,3 +1,31 @@
-canvas {display:block;width:100%;height:100vh;position:fixed;pointer-events:none}
-div {position:fixed;top:0;left:0;padding:1em;margin:1em;background:#fffb;backdrop-filter:blur(2px)}
-h1 {font-size:2em}
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.content-container {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2em;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+}
+
+h1 {
+  font-size: 2em;
+  line-height: 1.5;
+}
+
+.stitch-img {
+  display: block;
+  width: 180px;
+  margin-top: 20px;
+}
