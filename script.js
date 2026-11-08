@@ -1,96 +1,62 @@
-import * as THREE from 'three/webgpu'
-import { TSL as $ } from 'three/webgpu'
-import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'
-import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js'
+const canvas = document.getElementById('flashlight-canvas');
+const ctx = canvas.getContext('2d');
 
-async function init() {
-  try {
-    // Initialize RectAreaLight textures
-    const ltcData = RectAreaLightTexturesLib.init();
-    THREE.RectAreaLightNode.setLTC(ltcData);
+let pointer = {
+  x: window.innerWidth / 2,
+  y: window.innerHeight / 2
+};
 
-    const renderer = new THREE.WebGPURenderer();
-    await renderer.init();
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 0, 2);
-
-    const mat = new THREE.MeshPhysicalNodeMaterial({});
-    const floor_mesh = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), mat);
-    scene.add(floor_mesh);
-
-    const light0_tall = 0.777;
-    const light0 = new THREE.RectAreaLight('white', 0, light0_tall, 0);
-    scene.add(light0);
-    scene.add(new RectAreaLightHelper(light0));
-
-    const rp = new THREE.RenderPipeline(renderer);
-    const scene_pass = $.pass(scene, camera);
-    rp.outputNode = $.vec4(
-      scene_pass.rgb, 
-      $.mx_rgbtohsv(scene_pass.rgb).z.oneMinus().pow(16).mul(0.9)
-    );
-    
-    renderer.setAnimationLoop(() => rp.render());
-    document.body.prepend(renderer.domElement);
-
-    const light0_min_height = 0.3;
-    const light0_max_height = 0.5;
-    const light0_min_radius = 0.3;
-    const light0_min_intensity = 1;
-    const light0_max_intensity = 2;
-    const raycaster = new THREE.Raycaster();
-
-    function handle_pointer_move(x, y) {
-      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-      const intersections = raycaster.intersectObject(floor_mesh);
-      for (const i of intersections) {
-        if (i.object === floor_mesh) {
-          const a = -Math.atan2(i.point.y, i.point.x) + Math.PI / 2;
-          const r = Math.max(light0_min_radius, Math.hypot(i.point.x, i.point.y)) + 0.2;
-          light0.position.set(r * Math.sin(a), r * Math.cos(a), light0.width / 2);
-          light0.lookAt(0, 0, light0.width / 2);
-          light0.height = Math.min(light0_max_height, Math.max(light0_min_height, Math.hypot(x, y)));
-          light0.intensity = light0_min_intensity + Math.min(light0_max_intensity - light0_min_intensity, Math.hypot(x, y));
-        }
-      }
-    }
-
-    document.body.addEventListener('pointermove', (e) => {
-      const s = getComputedStyle(renderer.domElement);
-      const x = (e.clientX / parseInt(s.width)) * 2 - 1;
-      const y = (1 - (e.clientY) / parseInt(s.height)) * 2 - 1;
-      handle_pointer_move(x, y);
-    });
-
-    function update_light0_color() {
-      const s = getComputedStyle(renderer.domElement);
-      const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-      const y_ratio = Math.min(1.0, window.scrollY / (docHeight - parseFloat(s.height)));
-      light0.color.setHSL(y_ratio, 0.5, 0.5);
-    }
-
-    addEventListener('scroll', () => update_light0_color());
-
-    setTimeout(() => {
-      handle_pointer_move(0.2, -0.2);
-      update_light0_color();
-    }, 150);
-
-    addEventListener('resize', () => {
-      const { width, height } = renderer.domElement.getBoundingClientRect();
-      renderer.setPixelRatio(devicePixelRatio);
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    });
-
-    dispatchEvent(new Event('resize'));
-
-  } catch (err) {
-    console.error("WebGPU setup failed:", err);
-  }
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  draw();
 }
 
-init();
+function updatePointerPosition(e) {
+  if (e.touches && e.touches.length > 0) {
+    pointer.x = e.touches[0].clientX;
+    pointer.y = e.touches[0].clientY;
+  } else {
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+  }
+  draw();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Darkened background overlay (0.97 opacity for a deeper dark environment)
+  ctx.fillStyle = 'rgba(8, 6, 5, 0.97)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Slightly tighter flashlight beam radius (0.26 instead of 0.35)
+  const radius = Math.min(canvas.width, canvas.height) * 0.26;
+
+  // Dimmed radial gradient for a subtler glow
+  const gradient = ctx.createRadialGradient(
+    pointer.x, pointer.y, 5,
+    pointer.x, pointer.y, radius
+  );
+
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');    // Slightly softer center
+  gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.55)'); // Dimmer mid-glow
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');           // Smooth fade into darkness
+
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(pointer.x, pointer.y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// Event Listeners for Desktop + Mobile Touch
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('mousemove', updatePointerPosition);
+window.addEventListener('touchmove', updatePointerPosition, { passive: true });
+window.addEventListener('touchstart', updatePointerPosition, { passive: true });
+
+// Initial setup
+resizeCanvas();
